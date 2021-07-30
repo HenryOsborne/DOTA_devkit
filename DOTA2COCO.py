@@ -2,9 +2,13 @@ import dota_utils as util
 import os
 import cv2
 import json
+from tqdm import tqdm
 
-wordname_15 = ['plane', 'baseball-diamond', 'bridge', 'ground-track-field', 'small-vehicle', 'large-vehicle', 'ship', 'tennis-court',
-               'basketball-court', 'storage-tank',  'soccer-ball-field', 'roundabout', 'harbor', 'swimming-pool', 'helicopter']
+wordname_15 = ['plane', 'baseball-diamond', 'bridge', 'ground-track-field', 'small-vehicle',
+               'large-vehicle', 'ship','tennis-court','basketball-court',
+               'storage-tank', 'soccer-ball-field', 'roundabout', 'harbor', 'swimming-pool',
+               'helicopter']
+
 
 def DOTA2COCO(srcpath, destfile):
     imageparent = os.path.join(srcpath, 'images')
@@ -12,11 +16,11 @@ def DOTA2COCO(srcpath, destfile):
 
     data_dict = {}
     info = {'contributor': 'captain group',
-           'data_created': '2018',
-           'description': 'This is 1.0 version of DOTA dataset.',
-           'url': 'http://captain.whu.edu.cn/DOTAweb/',
-           'version': '1.0',
-           'year': 2018}
+            'data_created': '2018',
+            'description': 'This is 1.0 version of DOTA dataset.',
+            'url': 'http://captain.whu.edu.cn/DOTAweb/',
+            'version': '1.0',
+            'year': 2018}
     data_dict['info'] = info
     data_dict['images'] = []
     data_dict['categories'] = []
@@ -29,7 +33,7 @@ def DOTA2COCO(srcpath, destfile):
     image_id = 1
     with open(destfile, 'w') as f_out:
         filenames = util.GetFileFromThisRootDir(labelparent)
-        for file in filenames:
+        for file in tqdm(filenames):
             basename = util.custombasename(file)
             # image_id = int(basename[1:])
 
@@ -37,20 +41,18 @@ def DOTA2COCO(srcpath, destfile):
             img = cv2.imread(imagepath)
             height, width, c = img.shape
 
-            single_image = {}
-            single_image['file_name'] = basename + '.png'
-            single_image['id'] = image_id
-            single_image['width'] = width
-            single_image['height'] = height
+            single_image = {'file_name': basename + '.png',
+                            'id': image_id,
+                            'width': width,
+                            'height': height}
             data_dict['images'].append(single_image)
 
             # annotations
             objects = util.parse_dota_poly2(file)
             for obj in objects:
-                single_obj = {}
-                single_obj['area'] = obj['area']
-                single_obj['category_id'] = wordname_15.index(obj['name']) + 1
-                single_obj['segmentation'] = []
+                single_obj = {'area': obj['area'],
+                              'category_id': wordname_15.index(obj['name']) + 1,
+                              'segmentation': []}
                 single_obj['segmentation'].append(obj['poly'])
                 single_obj['iscrowd'] = 0
                 xmin, ymin, xmax, ymax = min(obj['poly'][0::2]), min(obj['poly'][1::2]), \
@@ -64,5 +66,7 @@ def DOTA2COCO(srcpath, destfile):
                 inst_count = inst_count + 1
             image_id = image_id + 1
         json.dump(data_dict, f_out)
+
+
 if __name__ == '__main__':
-    DOTA2COCO(r'/data0/data_dj/1024_new', r'/data0/data_dj/1024_new/DOTA_trainval1024.json')
+    DOTA2COCO(r'./examplesplit_800', r'./examplesplit_800/DOTA_trainval800.json')

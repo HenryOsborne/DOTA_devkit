@@ -1,19 +1,23 @@
-#The code is used for visulization, inspired from cocoapi
+# The code is used for visulization, inspired from cocoapi
 #  Licensed under the Simplified BSD License [see bsd.txt]
 
 import os
+from collections import defaultdict
+
+import cv2
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Polygon, Circle
-import numpy as np
+
 import dota_utils as util
-from collections import defaultdict
-import cv2
+
 
 def _isArrayLike(obj):
     if type(obj) == str:
         return False
     return hasattr(obj, '__iter__') and hasattr(obj, '__len__')
+
 
 class DOTA:
     def __init__(self, basepath):
@@ -52,7 +56,7 @@ class DOTA:
                     imgids &= set(self.catToImgs[cat])
         return list(imgids)
 
-    def loadAnns(self, catNms=[], imgId = None, difficult=None):
+    def loadAnns(self, catNms=[], imgId=None, difficult=None):
         """
         :param catNms: category names
         :param imgId: the img to load anns
@@ -64,6 +68,7 @@ class DOTA:
             return objects
         outobjects = [obj for obj in objects if (obj['name'] in catNms)]
         return outobjects
+
     def showAnns(self, objects, imgId, range):
         """
         :param catNms: category names
@@ -96,6 +101,7 @@ class DOTA:
         ax.add_collection(p)
         p = PatchCollection(circles, facecolors='red')
         ax.add_collection(p)
+
     def loadImgs(self, imgids=[]):
         """
         :param imgids: integer ids specifying img
@@ -112,10 +118,11 @@ class DOTA:
             imgs.append(img)
         return imgs
 
-# if __name__ == '__main__':
-#     examplesplit = DOTA('examplesplit')
-#     imgids = examplesplit.getImgIds(catNms=['plane'])
-#     img = examplesplit.loadImgs(imgids)
-#     for imgid in imgids:
-#         anns = examplesplit.loadAnns(imgId=imgid)
-#         examplesplit.showAnns(anns, imgid, 2)
+
+if __name__ == '__main__':
+    examplesplit = DOTA('examplesplit')
+    imgids = examplesplit.getImgIds(catNms=['plane'])
+    img = examplesplit.loadImgs(imgids)
+    for imgid in imgids:
+        anns = examplesplit.loadAnns(imgId=imgid)
+        examplesplit.showAnns(anns, imgid, 2)

@@ -12,15 +12,16 @@
 """
 import xml.etree.ElementTree as ET
 import os
-#import cPickle
+# import cPickle
 import numpy as np
 import matplotlib.pyplot as plt
+
 
 def parse_gt(filename):
     objects = []
     with open(filename, 'r') as f:
         lines = f.readlines()
-        splitlines = [x.strip().split(' ')  for x in lines]
+        splitlines = [x.strip().split(' ') for x in lines]
         for splitline in splitlines:
             object_struct = {}
             object_struct['name'] = splitline[8]
@@ -30,18 +31,20 @@ def parse_gt(filename):
                 object_struct['difficult'] = int(splitline[9])
             # object_struct['difficult'] = 0
             object_struct['bbox'] = [int(float(splitline[0])),
-                                         int(float(splitline[1])),
-                                         int(float(splitline[4])),
-                                         int(float(splitline[5]))]
+                                     int(float(splitline[1])),
+                                     int(float(splitline[4])),
+                                     int(float(splitline[5]))]
             w = int(float(splitline[4])) - int(float(splitline[0]))
             h = int(float(splitline[5])) - int(float(splitline[1]))
             object_struct['area'] = w * h
-            #print('area:', object_struct['area'])
+            # print('area:', object_struct['area'])
             # if object_struct['area'] < (15 * 15):
             #     #print('area:', object_struct['area'])
             #     object_struct['difficult'] = 1
             objects.append(object_struct)
     return objects
+
+
 def voc_ap(rec, prec, use_07_metric=False):
     """ ap = voc_ap(rec, prec, [use_07_metric])
     Compute VOC AP given precision and recall.
@@ -75,11 +78,12 @@ def voc_ap(rec, prec, use_07_metric=False):
         ap = np.sum((mrec[i + 1] - mrec[i]) * mpre[i + 1])
     return ap
 
+
 def voc_eval(detpath,
              annopath,
              imagesetfile,
              classname,
-            # cachedir,
+             # cachedir,
              ovthresh=0.5,
              use_07_metric=False):
     """rec, prec, ap = voc_eval(detpath,
@@ -106,31 +110,31 @@ def voc_eval(detpath,
     # cachedir caches the annotations in a pickle file
 
     # first load gt
-    #if not os.path.isdir(cachedir):
-     #   os.mkdir(cachedir)
-    #cachefile = os.path.join(cachedir, 'annots.pkl')
+    # if not os.path.isdir(cachedir):
+    #   os.mkdir(cachedir)
+    # cachefile = os.path.join(cachedir, 'annots.pkl')
     # read list of images
     with open(imagesetfile, 'r') as f:
         lines = f.readlines()
     imagenames = [x.strip() for x in lines]
-    #print('imagenames: ', imagenames)
-    #if not os.path.isfile(cachefile):
-        # load annots
+    # print('imagenames: ', imagenames)
+    # if not os.path.isfile(cachefile):
+    # load annots
     recs = {}
     for i, imagename in enumerate(imagenames):
-        #print('parse_files name: ', annopath.format(imagename))
+        # print('parse_files name: ', annopath.format(imagename))
         recs[imagename] = parse_gt(annopath.format(imagename))
-        #if i % 100 == 0:
-         #   print ('Reading annotation for {:d}/{:d}'.format(
-          #      i + 1, len(imagenames)) )
+        # if i % 100 == 0:
+        #   print ('Reading annotation for {:d}/{:d}'.format(
+        #      i + 1, len(imagenames)) )
         # save
-        #print ('Saving cached annotations to {:s}'.format(cachefile))
-        #with open(cachefile, 'w') as f:
-         #   cPickle.dump(recs, f)
-    #else:
-        # load
-        #with open(cachefile, 'r') as f:
-         #   recs = cPickle.load(f)
+        # print ('Saving cached annotations to {:s}'.format(cachefile))
+        # with open(cachefile, 'w') as f:
+        #   cPickle.dump(recs, f)
+    # else:
+    # load
+    # with open(cachefile, 'r') as f:
+    #   recs = cPickle.load(f)
 
     # extract gt objects for this class
     class_recs = {}
@@ -154,7 +158,7 @@ def voc_eval(detpath,
     image_ids = [x[0] for x in splitlines]
     confidence = np.array([float(x[1]) for x in splitlines])
 
-    #print('check confidence: ', confidence)
+    # print('check confidence: ', confidence)
 
     BB = np.array([[float(z) for z in x[2:]] for x in splitlines])
 
@@ -162,12 +166,12 @@ def voc_eval(detpath,
     sorted_ind = np.argsort(-confidence)
     sorted_scores = np.sort(-confidence)
 
-    #print('check sorted_scores: ', sorted_scores)
-    #print('check sorted_ind: ', sorted_ind)
+    # print('check sorted_scores: ', sorted_scores)
+    # print('check sorted_ind: ', sorted_ind)
     BB = BB[sorted_ind, :]
     image_ids = [image_ids[x] for x in sorted_ind]
-    #print('check imge_ids: ', image_ids)
-    #print('imge_ids len:', len(image_ids))
+    # print('check imge_ids: ', image_ids)
+    # print('imge_ids len:', len(image_ids))
     # go down dets and mark TPs and FPs
     nd = len(image_ids)
     tp = np.zeros(nd)
@@ -206,7 +210,7 @@ def voc_eval(detpath,
                     R['det'][jmax] = 1
                 else:
                     fp[d] = 1.
-                   # print('filename:', image_ids[d])
+                # print('filename:', image_ids[d])
         else:
             fp[d] = 1.
 
@@ -214,7 +218,6 @@ def voc_eval(detpath,
 
     print('check fp:', fp)
     print('check tp', tp)
-
 
     print('npos num:', npos)
     fp = np.cumsum(fp)
@@ -228,29 +231,32 @@ def voc_eval(detpath,
 
     return rec, prec, ap
 
+
 def main():
     # detpath = r'E:\documentation\OneDrive\documentation\DotaEvaluation\evluation_task2\evluation_task2\faster-rcnn-nms_0.3_task2\nms_0.3_task\Task2_{:s}.txt'
     # annopath = r'I:\dota\testset\ReclabelTxt-utf-8\{:s}.txt'
     # imagesetfile = r'I:\dota\testset\va.txt'
 
     detpath = r'PATH_TO_BE_CONFIGURED/Task2_{:s}.txt'
-    annopath = r'PATH_TO_BE_CONFIGURED/{:s}.txt'# change the directory to the path of val/labelTxt, if you want to do evaluation on the valset
+    annopath = r'PATH_TO_BE_CONFIGURED/{:s}.txt'  # change the directory to the path of val/labelTxt, if you want to do evaluation on the valset
     imagesetfile = r'PATH_TO_BE_CONFIGURED/valset.txt'
 
-    classnames = ['plane', 'baseball-diamond', 'bridge', 'ground-track-field', 'small-vehicle', 'large-vehicle', 'ship', 'tennis-court',
-                'basketball-court', 'storage-tank',  'soccer-ball-field', 'roundabout', 'harbor', 'swimming-pool', 'helicopter']
+    classnames = ['plane', 'baseball-diamond', 'bridge', 'ground-track-field', 'small-vehicle', 'large-vehicle', 'ship',
+                  'tennis-court',
+                  'basketball-court', 'storage-tank', 'soccer-ball-field', 'roundabout', 'harbor', 'swimming-pool',
+                  'helicopter']
     classaps = []
     map = 0
     for classname in classnames:
         print('classname:', classname)
         rec, prec, ap = voc_eval(detpath,
-             annopath,
-             imagesetfile,
-             classname,
-             ovthresh=0.5,
-             use_07_metric=True)
+                                 annopath,
+                                 imagesetfile,
+                                 classname,
+                                 ovthresh=0.5,
+                                 use_07_metric=True)
         map = map + ap
-        #print('rec: ', rec, 'prec: ', prec, 'ap: ', ap)
+        # print('rec: ', rec, 'prec: ', prec, 'ap: ', ap)
         print('ap: ', ap)
         classaps.append(ap)
 
@@ -260,9 +266,11 @@ def main():
         # plt.ylabel('precision')
         # plt.plot(rec, prec)
         # plt.show()
-    map = map/len(classnames)
+    map = map / len(classnames)
     print('map:', map)
-    classaps = 100*np.array(classaps)
+    classaps = 100 * np.array(classaps)
     print('classaps: ', classaps)
+
+
 if __name__ == '__main__':
     main()
